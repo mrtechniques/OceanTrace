@@ -6,8 +6,9 @@
 # ============================================================
 
 # --- Core scientific stack ---
-numpy>=1.26,<2.0
-scipy>=1.13
+# numpy 2.x ships prebuilt wheels for Python 3.13 on Windows (no C compiler needed)
+numpy>=2.0.0
+scipy>=1.13.0
 
 # --- Geospatial / raster I/O ---
 rasterio>=1.3.10          # GeoTIFF / SAR band reading

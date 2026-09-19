@@ -1,0 +1,21 @@
+# Enforce LF in the repo, checkout as CRLF on Windows
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files — no line-ending conversion
+*.tif binary
+*.tiff binary
+*.geotiff binary
+*.nc binary
+*.h5 binary
+*.hdf5 binary
+*.pt binary
+*.pth binary
+*.onnx binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
