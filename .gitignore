@@ -1,0 +1,95 @@
+# ============================================================
+# OceanTrace — .gitignore
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.whl
+MANIFEST
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Data (never commit raw/large satellite data) ---
+data/raw/
+data/processed/
+data/interim/
+*.tif
+*.tiff
+*.geotiff
+*.nc
+*.h5
+*.hdf5
+*.zip
+*.tar.gz
+*.parquet
+*.csv
+*.json
+!configs/**/*.json
+!tests/**/*.json
+
+# --- Model weights / checkpoints (use DVC or S3) ---
+models/checkpoints/*.pt
+models/checkpoints/*.pth
+models/checkpoints/*.onnx
+models/checkpoints/*.bin
+
+# --- Logs and experiment tracking ---
+logs/
+runs/
+wandb/
+mlruns/
+*.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.prof
+
+# --- Secrets ---
+.env
+.env.*
+secrets.yaml
+secrets.json
+*.pem
+*.key
+
+# --- Docs build ---
+docs/_build/
+site/
+
+# --- Temporary ---
+tmp/
+scratch/

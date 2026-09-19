@@ -1,0 +1,68 @@
+# ============================================================
+# OceanTrace — Stage 1 Pipeline Configuration
+# ============================================================
+
+project:
+  name: OceanTrace
+  version: "0.1.0"
+  stage: 1
+
+# --- SAR Preprocessing ---
+preprocessing:
+  # Radiometric calibration output type: "sigma0" | "beta0" | "gamma0"
+  calibration_output: "sigma0"
+
+  # Speckle filter: "lee" | "refined_lee" | "frost" | "gamma_map"
+  speckle_filter: "refined_lee"
+  speckle_window_size: 7
+
+  # Terrain correction DEM (used by SNAP; "SRTM 3Sec" is default)
+  dem: "SRTM 3Sec"
+
+  # Output pixel spacing in metres after terrain correction
+  pixel_spacing_m: 10.0
+
+# --- Image Chipping ---
+chipping:
+  # Chip size fed to the segmentation model (pixels)
+  chip_size: 640
+  # Overlap between adjacent chips (pixels)
+  overlap: 64
+  # Normalisation strategy: "minmax" | "percentile" | "zscore"
+  normalization: "percentile"
+  # Percentile clipping bounds (used when normalization = "percentile")
+  percentile_low: 2
+  percentile_high: 98
+
+# --- Segmentation Model ---
+segmentation:
+  # Model architecture: "yolov8n-seg" | "yolov8s-seg" | "yolov8m-seg" | ...
+  architecture: "yolov8n-seg"
+  # Path to model weights (relative to repo root or absolute)
+  # Leave empty until first training run completes
+  weights: ""
+  # Inference confidence threshold
+  conf_threshold: 0.25
+  # IoU threshold for NMS
+  iou_threshold: 0.45
+  # Run on: "cpu" | "cuda" | "mps"
+  device: "cpu"
+  # Input image size expected by the model
+  imgsz: 640
+
+# --- Postprocessing ---
+postprocessing:
+  # Minimum spill area to retain (m²) — smaller patches treated as noise
+  min_area_m2: 10000
+  # Morphological closing kernel size (pixels)
+  closing_kernel_size: 5
+  # Output CRS EPSG for geometric properties
+  output_crs_epsg: 4326
+
+# --- Paths (relative to repo root) ---
+paths:
+  raw_sar_dir: "data/raw/sar"
+  processed_mask_dir: "data/processed/masks"
+  processed_features_dir: "data/processed/features"
+  model_checkpoint_dir: "models/checkpoints"
+  logs_dir: "logs"
