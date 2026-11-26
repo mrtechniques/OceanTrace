@@ -1,12 +1,27 @@
-"""Segmentation sub-package: U-Net ResNet34 model wrapper and inference."""
+"""Segmentation sub-package: YOLO model wrapper, ResNet34 U-Net, dataset loader, inference."""
 
-from src.detection.segmentation.model import ResNet34UNet, load_model
-from src.detection.segmentation.predict import predict_chip, preprocess_chip, run_inference_on_checkpoint
+from src.detection.segmentation.model import (
+    DecoderBlock,
+    DoubleConv,
+    ResNet34UNet,
+    load_oil_spill_model,
+)
+from src.detection.segmentation.predict import (
+    PredictionResult,
+    predict_oil_spill,
+    predict_patch_direct,
+    predict_tiled,
+)
 
 __all__ = [
     "ResNet34UNet",
-    "load_model",
-    "predict_chip",
-    "preprocess_chip",
-    "run_inference_on_checkpoint",
+    "DoubleConv",
+    "DecoderBlock",
+    "load_oil_spill_model",
+    "PredictionResult",
+    "predict_oil_spill",
+    "predict_patch_direct",
+    "predict_tiled",
 ]
+
+

@@ -69,8 +69,9 @@ pytest-cov>=5.0.0
 # pandas>=2.2.0
 
 # --- Stage 4: API & DB ---
-# fastapi>=0.111.0
-# uvicorn[standard]>=0.30.0
+fastapi>=0.111.0
+uvicorn>=0.30.0
+python-multipart>=0.0.9
 # sqlalchemy>=2.0.30
 # asyncpg>=0.29.0
 # psycopg[binary]>=3.1.19

@@ -93,3 +93,11 @@ site/
 # --- Temporary ---
 tmp/
 scratch/
+
+# Trained model checkpoints
+*.pth
+*.pt
+*.ckpt
+
+# Training artifacts
+training_history.csv
