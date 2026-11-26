@@ -22,38 +22,41 @@ preprocessing:
   # Output pixel spacing in metres after terrain correction
   pixel_spacing_m: 10.0
 
-# --- Image Chipping ---
+# --- Image Chipping (Matched to Model Input) ---
 chipping:
   # Chip size fed to the segmentation model (pixels)
-  chip_size: 640
+  chip_size: 256
   # Overlap between adjacent chips (pixels)
-  overlap: 64
-  # Normalisation strategy: "minmax" | "percentile" | "zscore"
+  overlap: 32
+  # Channels: 3 (RGB format expected by ResNet34 encoder)
+  channels: 3
+  # Normalisation strategy: "minmax" | "percentile" | "imagenet"
   normalization: "percentile"
-  # Percentile clipping bounds (used when normalization = "percentile")
   percentile_low: 2
   percentile_high: 98
 
-# --- Segmentation Model ---
+# --- Segmentation Model: U-Net with ResNet34 Encoder ---
 segmentation:
-  # Model architecture: "yolov8n-seg" | "yolov8s-seg" | "yolov8m-seg" | ...
-  architecture: "yolov8n-seg"
-  # Path to model weights (relative to repo root or absolute)
-  # Leave empty until first training run completes
-  weights: ""
-  # Inference confidence threshold
-  conf_threshold: 0.25
-  # IoU threshold for NMS
-  iou_threshold: 0.45
-  # Run on: "cpu" | "cuda" | "mps"
-  device: "cpu"
-  # Input image size expected by the model
-  imgsz: 640
+  # Architecture: U-Net with ResNet34 backbone
+  framework: "pytorch"
+  architecture: "unet_resnet34"
+  encoder: "resnet34"
+  in_channels: 3
+  num_classes: 2
+  classes:
+    0: "background"
+    1: "oil_spill"
+  # Target checkpoint path inside models/checkpoints/
+  weights: "models/checkpoints/unet_resnet34_oilspill.pth"
+  # Inference threshold (sigmoid/softmax probability threshold for class 1)
+  prob_threshold: 0.50
+  device: "cpu"  # Automatically switches to "cuda" if GPU is available
+  imgsz: 256
 
 # --- Postprocessing ---
 postprocessing:
-  # Minimum spill area to retain (m²) — smaller patches treated as noise
-  min_area_m2: 10000
+  # Minimum spill area to retain (m²) — smaller patches treated as speckle noise
+  min_area_m2: 5000
   # Morphological closing kernel size (pixels)
   closing_kernel_size: 5
   # Output CRS EPSG for geometric properties

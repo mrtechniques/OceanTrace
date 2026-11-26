@@ -25,7 +25,7 @@ Sentinel-1 SAR / EO imagery
 
 | Stage | Module | Key Technologies |
 |-------|--------|-----------------|
-| 1 | SAR Preprocessing & Oil-Spill Detection | Sentinel-1, PyTorch, YOLO Segmentation |
+| 1 | SAR Preprocessing & Oil-Spill Detection | Sentinel-1, PyTorch, U-Net (ResNet34) Segmentation |
 | 2 | Spill Drift & Hindcast Modelling | OpenDrift, ERA5 winds/currents, CMEMS ocean data |
 | 3 | AIS Data Ingestion & Trajectory Reconstruction | pyais, PostGIS, GeoPandas |
 | 4 | Vessel Correlation & Evidence Scoring | Spatial-temporal analysis, behavioural heuristics |
@@ -40,7 +40,7 @@ Sentinel-1 SAR / EO imagery
 ```
 Sentinel-1 SAR image
   → Preprocessing (calibration, speckle filter, terrain correction)
-  → Oil-Spill Segmentation  (YOLO-based instance segmentation)
+  → Oil-Spill Segmentation  (U-Net ResNet34 semantic segmentation)
   → Spill Mask (binary + confidence map)
   → Geometric Properties (area, perimeter, centroid, bounding box — CRS-aware)
 ```
@@ -65,8 +65,8 @@ src/detection/preprocessing/
         │
         ▼
 src/detection/segmentation/
-  ├── model.py           ← YOLO segmentation wrapper (Ultralytics API)
-  ├── predict.py         ← Inference on preprocessed GeoTIFF chips
+  ├── model.py           ← U-Net ResNet34 model definition & checkpoint loader
+  ├── predict.py         ← Inference on preprocessed 256x256 GeoTIFF chips
   └── dataset.py         ← Dataset loader (format TBD after inspection)
         │
         ▼
@@ -169,7 +169,7 @@ Recommended product type: **Sentinel-1 GRD IW** (Ground Range Detected, Interfer
 - [x] Stage 1 — Repository scaffold & environment setup
 - [ ] Stage 1 — Dataset inspection notebook
 - [ ] Stage 1 — SAR preprocessing pipeline
-- [ ] Stage 1 — YOLO segmentation baseline
+- [ ] Stage 1 — U-Net ResNet34 segmentation baseline
 - [ ] Stage 1 — Geometric property extraction
 - [ ] Stage 2 — Drift modelling integration
 - [ ] Stage 3 — AIS data ingestion & reconstruction

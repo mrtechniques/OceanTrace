@@ -15,8 +15,8 @@
 |------|--------|-----------|
 | Preprocessing | rasterio (Python) + optional SNAP | SNAP is gold-standard; rasterio allows SNAP-free fallback |
 | Speckle filter | Refined-Lee 7×7 | Best trade-off between edge preservation and speckle suppression |
-| Segmentation | YOLOv8/v11-seg | Fast, well-supported, works on image chips |
-| Chipping | 640×640 px, 64 px overlap | Matches YOLO default input; overlap prevents edge artefacts |
+| Segmentation | U-Net (ResNet34) | High pixel-level boundary precision on dark backscatter patches |
+| Chipping | 256×256 px, 32 px overlap | Matches ResNet34 input resolution; overlap prevents border artifacts |
 | Normalisation | Percentile (2nd–98th) | Robust to outliers in SAR backscatter |
 | Output CRS | EPSG:4326 | Universal; downstream drift model expects WGS84 |
 
@@ -38,7 +38,7 @@
 - **Elongation** (major axis / minor axis)
 - **Circularity** (4π·Area / Perimeter²)
 - **Scene timestamp** (UTC) — critical for drift hindcasting
-- **Confidence score** — YOLO mask confidence
+- **Confidence score** — U-Net sigmoid/softmax mask confidence
 - **Backscatter statistics** — mean, std σ⁰ inside mask
 
 ### Data Flow Diagram
