@@ -66,6 +66,32 @@ def test_health_endpoint():
     assert "timestamp" in data
 
 
+def test_model_info_endpoint():
+    """Verify GET /api/model-info returns architecture, classes, and established evaluation metrics."""
+    response = client.get("/api/model-info")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["architecture"] == "ResNet34UNet"
+    assert data["encoder"] == "resnet34"
+    assert data["input_channels"] == 3
+    assert "Background (0)" in data["supported_classes"][0]
+    assert "Oil Spill (1)" in data["supported_classes"][1]
+    assert data["checkpoint_epoch"] == 14
+    assert pytest.approx(data["checkpoint_best_val_dice"], rel=1e-4) == 0.8255
+
+    # Verify established evaluation metrics
+    metrics = data["evaluation_metrics"]
+    assert pytest.approx(metrics["precision"], rel=1e-4) == 0.8776
+    assert pytest.approx(metrics["recall"], rel=1e-4) == 0.8940
+    assert pytest.approx(metrics["f1_score"], rel=1e-4) == 0.8857
+    assert pytest.approx(metrics["global_dice"], rel=1e-4) == 0.8857
+    assert pytest.approx(metrics["mean_dice"], rel=1e-4) == 0.8270
+    assert pytest.approx(metrics["global_iou"], rel=1e-4) == 0.7949
+    assert pytest.approx(metrics["mean_iou"], rel=1e-4) == 0.7327
+
+
+
 def test_predict_png_and_retrieve_results(sample_png_bytes: io.BytesIO):
     """Verify POST /api/predict with PNG upload and subsequent asset retrieval."""
     response = client.post(
@@ -91,6 +117,10 @@ def test_predict_png_and_retrieve_results(sample_png_bytes: io.BytesIO):
     assert urls["overlay_url"] == f"/api/results/{prediction_id}/overlay"
     assert urls["original_image_url"] == f"/api/results/{prediction_id}/original"
     assert urls["details_url"] == f"/api/results/{prediction_id}"
+    assert data["mask_url"] == urls["mask_url"]
+    assert data["overlay_url"] == urls["overlay_url"]
+    assert data["original_image_url"] == urls["original_image_url"]
+    assert "processing_time_ms" in data
 
     # 1. Retrieve full details via GET /api/results/{prediction_id}
     res_details = client.get(f"/api/results/{prediction_id}")

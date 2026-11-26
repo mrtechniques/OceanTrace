@@ -1,5 +1,4 @@
 """
-<<<<<<< HEAD
 Inference pipeline for SAR oil spill detection using ResNet34 U-Net.
 
 Supports single-patch inference, seamless tiled inference for large GeoTIFF
@@ -17,6 +16,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from src.detection.preprocessing.loader import convert_to_three_channel, load_image
 from src.detection.preprocessing.normalization import normalize_image
@@ -341,18 +341,11 @@ def predict_oil_spill(
         binary_mask=binary_mask,
         metadata=metadata,
     )
-=======
-Inference pipeline for U-Net ResNet34 oil-spill segmentation on 256x256 image chips.
-"""
-from pathlib import Path
-from typing import Tuple, Union
 
-import numpy as np
-import torch
-import torch.nn.functional as F
 
-from src.detection.segmentation.model import load_model
-
+# ---------------------------------------------------------------------------
+# Convenience Chip-Level Functions (Teammate / Legacy compatibility)
+# ---------------------------------------------------------------------------
 
 def preprocess_chip(chip: np.ndarray) -> torch.Tensor:
     """
@@ -365,22 +358,20 @@ def preprocess_chip(chip: np.ndarray) -> torch.Tensor:
     Returns:
       - torch.Tensor with shape (1, 3, 256, 256) normalized to [0, 1] float32.
     """
-    # If channel last (256, 256, C), transpose to (C, 256, 256)
-    if chip.ndim == 3 and chip.shape[-1] in (1, 3):
-        chip = np.transpose(chip, (2, 0, 1))
+    arr = np.asarray(chip)
+    if arr.ndim == 3 and arr.shape[-1] in (1, 3):
+        arr = np.transpose(arr, (2, 0, 1))
 
-    # If single-channel (256, 256) or (1, 256, 256), repeat to 3 channels for ResNet34
-    if chip.ndim == 2:
-        chip = np.stack([chip, chip, chip], axis=0)
-    elif chip.shape[0] == 1:
-        chip = np.repeat(chip, 3, axis=0)
+    if arr.ndim == 2:
+        arr = np.stack([arr, arr, arr], axis=0)
+    elif arr.shape[0] == 1:
+        arr = np.repeat(arr, 3, axis=0)
 
-    # Standard min-max percentile scaling to [0, 1] if not already normalized
-    if chip.max() > 1.0 or chip.min() < 0.0:
-        p2, p98 = np.percentile(chip, (2, 98))
-        chip = np.clip((chip - p2) / (p98 - p2 + 1e-7), 0.0, 1.0)
+    if arr.max() > 1.0 or arr.min() < 0.0:
+        p2, p98 = np.percentile(arr, (2, 98))
+        arr = np.clip((arr - p2) / (p98 - p2 + 1e-7), 0.0, 1.0)
 
-    tensor = torch.from_numpy(chip.astype(np.float32)).unsqueeze(0)  # Shape (1, 3, 256, 256)
+    tensor = torch.from_numpy(arr.astype(np.float32)).unsqueeze(0)
     return tensor
 
 
@@ -389,30 +380,26 @@ def predict_chip(
     model: torch.nn.Module,
     chip: np.ndarray,
     prob_threshold: float = 0.50,
-    device: str = "cpu"
+    device: str = "cpu",
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Runs segmentation inference on a 256x256 chip.
+    Runs segmentation inference on a single 256x256 chip.
     
     Returns:
-      - binary_mask: (256, 256) uint8 array (1 for Oil Spill, 0 for Background)
-      - confidence_map: (256, 256) float32 array (Probability of Oil Spill [0.0 - 1.0])
+      - binary_mask: (H, W) uint8 array (1 for Oil Spill, 0 for Background)
+      - confidence_map: (H, W) float32 array (Probability of Oil Spill [0.0 - 1.0])
     """
     model.eval()
     x = preprocess_chip(chip).to(device)
+    logits = model(x)
 
-    logits = model(x)  # Shape (1, 2, 256, 256)
-    
     if logits.shape[1] == 2:
-        # 2-class softmax: class 0 is Background, class 1 is Oil Spill
         probs = F.softmax(logits, dim=1)[:, 1, :, :]
     else:
-        # Single-class sigmoid
         probs = torch.sigmoid(logits)[:, 0, :, :]
 
-    prob_map = probs.squeeze(0).cpu().numpy()  # (256, 256)
+    prob_map = probs.squeeze(0).cpu().numpy().astype(np.float32)
     binary_mask = (prob_map >= prob_threshold).astype(np.uint8)
-
     return binary_mask, prob_map
 
 
@@ -420,9 +407,10 @@ def run_inference_on_checkpoint(
     chip: np.ndarray,
     checkpoint_path: Union[str, Path],
     prob_threshold: float = 0.50,
-    device: str = "cpu"
+    device: str = "cpu",
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Convenience helper to load a checkpoint and run inference in one call."""
-    model = load_model(checkpoint_path=checkpoint_path, num_classes=2, device=device)
+    """Convenience helper to load a checkpoint and run chip inference."""
+    from src.detection.segmentation.model import load_model
+    model = load_model(checkpoint_path=checkpoint_path, device=device)
     return predict_chip(model, chip, prob_threshold=prob_threshold, device=device)
->>>>>>> 882e479deba40b4b1d376eae067078152bdfdcde
+

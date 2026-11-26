@@ -6,31 +6,35 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
-from src.api.dependencies import ModelManager
-from src.api.routers import health, predict
+from src.api.dependencies import ModelService
+from src.api.routers import ais, correlation, health, predict, satellite
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("oceantrace.api")
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifespan context manager to pre-warm model weights on server startup."""
     logger.info("Initializing OceanTrace backend...")
-    manager = ModelManager.get_instance()
+    service = ModelService.get_instance()
     try:
-        manager.load_model()
+        service.load()
         logger.info(
             "Neural network ready on device: %s (Epoch: %s, Best Val Dice: %s)",
-            manager.get_device_str(),
-            manager.metadata.get("epoch"),
-            manager.metadata.get("best_val_dice"),
+            service.device_str,
+            service.metadata.get("epoch"),
+            service.metadata.get("best_val_dice"),
         )
     except Exception as exc:
         logger.error("Failed to pre-warm model during startup: %s", exc)
@@ -56,7 +60,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Enable CORS for future frontend integration (e.g. React/Vite/Leaflet)
+    # Enable CORS for frontend integration across any local port or domain
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -68,10 +72,20 @@ def create_app() -> FastAPI:
     # Register API routers
     app.include_router(health.router, prefix="/api")
     app.include_router(predict.router, prefix="/api")
+    app.include_router(ais.router, prefix="/api")
+    app.include_router(satellite.router, prefix="/api")
+    app.include_router(correlation.router, prefix="/api")
+
+    # Mount static frontend assets if available
+    ui_dir = REPO_ROOT / "ui"
+    if ui_dir.exists():
+        app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
 
     @app.get("/", include_in_schema=False)
     def root():
-        """Redirect root index to interactive OpenAPI documentation."""
+        """Redirect root index to the integrated UI, fallback to API documentation."""
+        if (REPO_ROOT / "ui" / "index.html").exists():
+            return RedirectResponse(url="/ui/index.html")
         return RedirectResponse(url="/docs")
 
     return app

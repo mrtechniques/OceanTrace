@@ -52,6 +52,14 @@
       <!-- Right Telemetry & Live Clock -->
       <div class="header-telemetry">
         <div class="telemetry-item">
+          <span class="telemetry-label">Backend API</span>
+          <span id="backend-status-container" class="telemetry-val" style="display: flex; align-items: center; gap: 0.35rem;">
+            <span id="backend-status-pill" class="status-pill live" style="padding: 0.15rem 0.45rem;">
+              <span class="pulse-dot"></span> Connecting...
+            </span>
+          </span>
+        </div>
+        <div class="telemetry-item">
           <span class="telemetry-label">Copernicus SAR</span>
           <span class="telemetry-val" style="display: flex; align-items: center; gap: 0.35rem;">
             <span class="status-pill live" style="padding: 0.15rem 0.45rem;">
@@ -77,6 +85,7 @@
 
   <!-- Application Logic -->
   <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/components/monitor.js"></script>
   <script src="js/components/forensics.js"></script>
   <script src="js/components/attribution.js"></script>

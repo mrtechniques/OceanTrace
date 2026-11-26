@@ -9,6 +9,31 @@ const App = {
     this.startClock();
     this.navigateTo('monitor');
     this.bindGlobalEvents();
+    this.checkBackendHealth();
+  },
+
+  async checkBackendHealth() {
+    const pill = document.getElementById('backend-status-pill');
+    if (!pill) return;
+
+    try {
+      const health = await OceanTraceApi.checkHealth();
+      if (health.status === 'healthy' && health.model_loaded) {
+        pill.className = 'status-pill live';
+        pill.innerHTML = `<span class="pulse-dot"></span> Online (${health.device.toUpperCase()})`;
+      } else if (health.status === 'healthy') {
+        pill.className = 'status-pill';
+        pill.style.background = 'var(--ivory-400)';
+        pill.style.color = 'var(--blue-900)';
+        pill.innerHTML = `Model Offline`;
+      } else {
+        pill.className = 'status-pill coral';
+        pill.innerHTML = `Backend Disconnected`;
+      }
+    } catch (e) {
+      pill.className = 'status-pill coral';
+      pill.innerHTML = `Offline`;
+    }
   },
 
   renderLayout() {

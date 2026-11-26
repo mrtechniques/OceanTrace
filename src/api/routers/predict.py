@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from PIL import Image
@@ -164,6 +165,16 @@ async def predict_spill_endpoint(
     created_iso = datetime.now(timezone.utc).isoformat()
     urls = _build_urls(prediction_id)
 
+    # Calculate confidence if spill is detected (mean probability on positive pixels)
+    mean_spill_prob = (
+        float(res.probability_map[res.binary_mask > 0].mean())
+        if res.spill_detected and np.any(res.binary_mask > 0)
+        else None
+    )
+
+    inference_ms = float(res.metadata.get("inference_time_ms", 0.0))
+    total_ms = float(res.metadata.get("total_time_ms", 0.0))
+
     response = PredictResponse(
         prediction_id=prediction_id,
         status="completed",
@@ -172,16 +183,21 @@ async def predict_spill_endpoint(
         spill_detected=res.spill_detected,
         spill_pixel_count=res.spill_pixel_count,
         spill_coverage_percentage=res.metadata.get("spill_coverage_percentage", 0.0),
+        confidence=round(mean_spill_prob, 4) if mean_spill_prob is not None else None,
         threshold_applied=threshold,
         norm_method=norm_method,
         tiled_inference=bool(res.metadata.get("tiled_inference", False)),
-        inference_time_ms=res.metadata.get("inference_time_ms", 0.0),
-        total_time_ms=res.metadata.get("total_time_ms", 0.0),
+        inference_time_ms=inference_ms,
+        processing_time_ms=total_ms,
+        total_time_ms=total_ms,
         prob_min=res.metadata.get("prob_min", 0.0),
         prob_max=res.metadata.get("prob_max", 0.0),
         prob_mean=res.metadata.get("prob_mean", 0.0),
         geospatial=geo_meta,
         urls=urls,
+        original_image_url=urls.original_image_url,
+        mask_url=urls.mask_url,
+        overlay_url=urls.overlay_url,
         created_at=created_iso,
     )
 

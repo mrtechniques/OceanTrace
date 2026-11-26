@@ -52,12 +52,23 @@ models/checkpoints/*.pth
 models/checkpoints/*.onnx
 models/checkpoints/*.bin
 
+
+
+# Model checkpoints
+*.pth
+*.pt
+*.ckpt
+
+# Training artifacts
+training_history.csv
+
 # --- Logs and experiment tracking ---
 logs/
 runs/
 wandb/
 mlruns/
 *.log
+git ls-files models/best_oil_spill_unet.pth
 
 # --- OS ---
 .DS_Store
@@ -93,11 +104,3 @@ site/
 # --- Temporary ---
 tmp/
 scratch/
-
-# Trained model checkpoints
-*.pth
-*.pt
-*.ckpt
-
-# Training artifacts
-training_history.csv
